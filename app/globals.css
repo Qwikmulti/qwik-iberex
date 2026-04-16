@@ -1,26 +1,179 @@
+/* ─── Fonts ─────────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap");
+
 @import "tailwindcss";
+@config "../tailwind.config.cjs";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Font families */
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Brand colors */
+  --color-forest-50: #f0f5f2;
+  --color-forest-100: #d6e8de;
+  --color-forest-600: #1f5a44;
+  --color-forest-700: #174332;
+  --color-forest-800: #112e24;
+  --color-forest-900: #0b1e17;
+
+  --color-cream-50: #fafaf7;
+  --color-cream-100: #f5f4f0;
+  --color-cream-200: #ede9e1;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+  --shadow-elevated: 0 4px 6px rgba(0,0,0,.07), 0 12px 40px rgba(0,0,0,.1);
+  --shadow-modal: 0 20px 60px rgba(0,0,0,.2);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ─── Base ─────────────────────────────────────────────────────────────────── */
+@layer base {
+  * { box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream-100 text-ink-900;
+    font-family: var(--font-body);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  ::selection {
+    @apply bg-forest-700 text-cream-50;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Typography utilities ─────────────────────────────────────────────────── */
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .font-body { font-family: var(--font-body); }
+
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+
+  /* Iberex label style */
+  .label-overline {
+    @apply text-2xs font-body font-medium uppercase text-forest-600;
+    letter-spacing: 0.2em;
+  }
+
+  /* Marquee for status badges */
+  .badge-status {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-medium uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Property card hover */
+  .card-hover {
+    @apply transition-all duration-300 ease-out-expo hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)];
+  }
+
+  /* Prose for blog content */
+  /* .prose-iberex {
+    @apply prose prose-lg prose-forest max-w-none;
+  }
+
+  .prose-iberex h2 {
+    font-family: var(--font-display);
+    @apply text-forest-900;
+  } */
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+
+  /* Ink divider */
+  .divider {
+    @apply border-t border-ink-100;
+  }
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-ink-200 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-ink-300; }
+
+/* ─── Animations ────────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-up   { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in   { animation: fadeIn 0.4s ease both; }
+.animate-scale-in  { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Staggered children */
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 80ms; }
+.stagger > *:nth-child(3) { animation-delay: 160ms; }
+.stagger > *:nth-child(4) { animation-delay: 240ms; }
+.stagger > *:nth-child(5) { animation-delay: 320ms; }
+.stagger > *:nth-child(6) { animation-delay: 400ms; }
+
+/* ─── Form styles ───────────────────────────────────────────────────────────── */
+.input-iberex {
+  @apply w-full bg-white border border-cream-300 rounded-lg px-4 py-3
+         text-sm text-ink-900 placeholder:text-ink-400
+         focus:outline-none focus:ring-2 focus:ring-forest-600 focus:border-transparent
+         transition-all duration-200;
+}
+
+  .btn-primary {
+  @apply inline-flex items-center justify-center gap-2
+         bg-forest-700 text-cream-50 font-body font-medium
+         px-6 py-3 rounded-lg text-sm
+         hover:bg-forest-800 active:bg-forest-900
+         transition-colors duration-200 cursor-pointer;
+  letter-spacing: 0.02em;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2
+         bg-transparent text-forest-700 font-body font-medium
+         px-6 py-3 rounded-lg text-sm border border-forest-700
+         hover:bg-forest-50 active:bg-forest-100
+         transition-colors duration-200 cursor-pointer;
+  letter-spacing: 0.02em;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2
+         text-ink-700 font-body font-medium
+         px-4 py-2 rounded-lg text-sm
+         hover:bg-ink-50 active:bg-ink-100
+         transition-colors duration-200 cursor-pointer;
+}
+
+/* ─── Image overlay ─────────────────────────────────────────────────────────── */
+.img-overlay::after {
+  content: "";
+  @apply absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent;
 }
