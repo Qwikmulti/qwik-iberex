@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createInquiry } from "@/lib/db/inquiries";
-import { inquirySchema } from "@/lib/validations";
+import { inquirySchema, tourRequestSchema } from "@/lib/validations";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -11,12 +11,27 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const data = inquirySchema.parse(body);
+    const source = body.source ?? "contact-form";
+    
+    let validatedData: any;
+    let finalMessage: string;
+
+    if (source === "tour-request") {
+      validatedData = tourRequestSchema.parse(body);
+      finalMessage = body.specialRequirements || "Requesting a private tour.";
+    } else {
+      validatedData = inquirySchema.parse(body);
+      finalMessage = validatedData.message;
+    }
 
     const inquiry = await createInquiry({
-      ...data,
-      source: body.source ?? "contact-form",
-      propertyTitle: body.propertyTitle,
+      fullName: validatedData.fullName,
+      email: validatedData.email,
+      phone: (validatedData as any).phone,
+      message: finalMessage,
+      propertyId: validatedData.propertyId,
+      propertyTitle: (validatedData as any).propertyTitle || body.propertyTitle,
+      source,
     });
 
     // Send notification email
@@ -24,21 +39,23 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: process.env.EMAIL_FROM ?? "noreply@iberexestate.com",
         to: process.env.EMAIL_INQUIRY_TO,
-        subject: `New Inquiry from ${data.fullName}`,
+        subject: `[${source.toUpperCase()}] New Inquiry from ${validatedData.fullName}`,
         html: `
           <h2>New Inquiry Received</h2>
-          <p><strong>Name:</strong> ${data.fullName}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
-          ${data.phone ? `<p><strong>Phone:</strong> ${data.phone}</p>` : ""}
-          ${body.propertyTitle ? `<p><strong>Property:</strong> ${body.propertyTitle}</p>` : ""}
+          <p><strong>Source:</strong> ${source}</p>
+          <p><strong>Name:</strong> ${validatedData.fullName}</p>
+          <p><strong>Email:</strong> ${validatedData.email}</p>
+          ${(validatedData as any).phone ? `<p><strong>Phone:</strong> ${(validatedData as any).phone}</p>` : ""}
+          ${(validatedData as any).propertyTitle || body.propertyTitle ? `<p><strong>Property:</strong> ${(validatedData as any).propertyTitle || body.propertyTitle}</p>` : ""}
           <p><strong>Message:</strong></p>
-          <blockquote>${data.message}</blockquote>
+          <blockquote>${finalMessage}</blockquote>
         `,
       }).catch(console.error);
     }
 
     return NextResponse.json({ success: true, id: inquiry.id });
   } catch (error: any) {
+    console.error("Inquiry error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }
