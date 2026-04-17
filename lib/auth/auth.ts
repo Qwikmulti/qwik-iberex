@@ -65,6 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
+      console.log("JWT callback triggered", { hasUser: !!user });
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -72,14 +73,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
+      console.log("Session callback triggered", { hasToken: !!token });
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
       }
       return session;
     },
-    async signIn({ user }) {
-      if (!user.email) return false;
+    async signIn({ user, account }) {
+      console.log("SignIn callback triggered", { userEmail: user?.email, accountProvider: account?.provider });
+      if (!user.email) {
+        console.log("SignIn rejected: No email");
+        return false;
+      }
       return true;
     },
   },

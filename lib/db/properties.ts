@@ -151,3 +151,13 @@ export async function updateProperty(id: string, data: Prisma.PropertyUpdateInpu
 export async function deleteProperty(id: string) {
   return prisma.property.update({ where: { id }, data: { published: false } }); // soft delete
 }
+export async function getPropertyForAdminEdit(id: string) {
+  return prisma.property.findUnique({
+    where: { id },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+      amenities: { include: { amenity: true } },
+      neighborhood: true,
+    },
+  });
+}

@@ -9,6 +9,29 @@ async function requireAdmin() {
   return ["ADMIN", "AGENT"].includes(role);
 }
 
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  try {
+    const property = await prisma.property.findUnique({
+      where: { id },
+      include: {
+        images: { orderBy: { sortOrder: "asc" } },
+        amenities: { include: { amenity: true } },
+        neighborhood: true,
+      },
+    });
+
+    if (!property) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    return NextResponse.json(property);
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+  }
+}
+
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

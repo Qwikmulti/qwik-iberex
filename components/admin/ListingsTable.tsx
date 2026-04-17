@@ -20,6 +20,10 @@ import {
   getStatusLabel,
   formatDateShort,
 } from "@/lib/utils";
+import * as Dialog from "@radix-ui/react-dialog";
+import { PropertyForm } from "./PropertyForm";
+import type { Neighborhood, Amenity } from "@prisma/client";
+import { Loader2, X as CloseIcon } from "lucide-react";
 
 interface Property {
   id: string;
@@ -44,6 +48,8 @@ interface ListingsTableProps {
   currentPage: number;
   currentSearch: string;
   currentStatus: string;
+  neighborhoods: Neighborhood[];
+  amenities: Amenity[];
 }
 
 const STATUS_OPTIONS = [
@@ -64,6 +70,8 @@ export function ListingsTable({
   currentPage,
   currentSearch,
   currentStatus,
+  neighborhoods,
+  amenities,
 }: ListingsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -73,6 +81,34 @@ export function ListingsTable({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState(currentSearch);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+
+  // Edit Sheet State
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingProperty, setEditingProperty] = useState<any | null>(null);
+  const [isLoadingProperty, setIsLoadingProperty] = useState(false);
+
+  const handleEditClick = async (id: string) => {
+    setEditingId(id);
+    setIsSheetOpen(true);
+    setOpenMenu(null);
+    setIsLoadingProperty(true);
+    try {
+      const res = await fetch(`/api/admin/listings/${id}`);
+      const data = await res.json();
+      setEditingProperty(data);
+    } catch (error) {
+      console.error("Failed to fetch property:", error);
+    } finally {
+      setIsLoadingProperty(false);
+    }
+  };
+
+  const closeSheet = () => {
+    setIsSheetOpen(false);
+    setEditingId(null);
+    setEditingProperty(null);
+  };
 
   const updateParams = (updates: Record<string, string>) => {
     const sp = new URLSearchParams(params.toString());
@@ -118,6 +154,7 @@ export function ListingsTable({
   };
 
   return (
+    <>
     <div className="bg-white rounded-2xl border border-cream-200 overflow-hidden">
       {/* Toolbar */}
       <div className="px-5 py-4 border-b border-cream-100 flex flex-wrap items-center gap-3">
@@ -353,12 +390,12 @@ export function ListingsTable({
                           >
                             <Eye size={14} /> View Live
                           </Link>
-                          <Link
-                            href={`/admin/listings/${property.id}/edit`}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-ink-600 hover:bg-cream-50"
+                          <button
+                            onClick={() => handleEditClick(property.id)}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-ink-600 hover:bg-cream-50"
                           >
                             <Pencil size={14} /> Edit
-                          </Link>
+                          </button>
                           <button
                             onClick={() => handleDelete(property.id)}
                             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -401,5 +438,64 @@ export function ListingsTable({
         </div>
       )}
     </div>
+
+      {/* Edit Property Sheet */}
+      <Dialog.Root open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content 
+            className="fixed inset-y-0 right-0 w-full max-w-2xl bg-cream-50 z-[101] shadow-2xl flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right duration-300"
+            onPointerDownOutside={(e) => {
+              // Prevent closing when clicking outside if form is dirty? (standard Radix behavior is fine)
+            }}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-cream-200 flex items-center justify-between bg-white">
+              <div>
+                <Dialog.Title className="text-xl font-display text-ink-900">
+                  {isLoadingProperty ? "Loading Listing..." : `Edit: ${editingProperty?.title ?? "Listing"}`}
+                </Dialog.Title>
+                <Dialog.Description className="text-sm text-ink-400 font-body">
+                  Update property details, pricing, and media assets.
+                </Dialog.Description>
+              </div>
+              <Dialog.Close asChild>
+                <button 
+                  onClick={closeSheet}
+                  className="p-2 rounded-lg hover:bg-cream-100 text-ink-400 transition-colors"
+                >
+                  <CloseIcon size={20} />
+                </button>
+              </Dialog.Close>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto p-6 scroll-smooth">
+              {isLoadingProperty ? (
+                <div className="h-64 flex flex-col items-center justify-center gap-4 text-ink-400">
+                  <Loader2 size={32} className="animate-spin text-forest-600" />
+                  <p className="text-sm font-body">Fetching property details…</p>
+                </div>
+              ) : editingProperty ? (
+                <PropertyForm 
+                  property={editingProperty}
+                  neighborhoods={neighborhoods}
+                  amenities={amenities}
+                  onSuccess={() => {
+                    closeSheet();
+                    router.refresh();
+                  } }
+                  onCancel={closeSheet}
+                />
+              ) : (
+                <div className="text-center py-12 text-ink-400">
+                  Failed to load property data.
+                </div>
+              )}
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </>
   );
 }

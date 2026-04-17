@@ -17,10 +17,12 @@ export function proxy(req: NextRequest) {
     pathname.startsWith("/admin") &&
     !pathname.startsWith("/admin/login")
   ) {
-    // NextAuth v4 session cookie names (database strategy)
+    // NextAuth v4 / v5 session cookie names
     const sessionToken =
       req.cookies.get("next-auth.session-token")?.value ??
-      req.cookies.get("__Secure-next-auth.session-token")?.value;
+      req.cookies.get("__Secure-next-auth.session-token")?.value ??
+      req.cookies.get("authjs.session-token")?.value ??
+      req.cookies.get("__Secure-authjs.session-token")?.value;
 
     if (!sessionToken) {
       const loginUrl = new URL("/admin/login", req.url);

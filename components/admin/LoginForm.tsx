@@ -98,7 +98,7 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@iberexestate.com"
+              placeholder="iberexestatesinvestment@gmail.com"
               className="w-full bg-ink-800 border border-ink-600 rounded-xl pl-12 pr-4 py-3 text-sm text-cream-100 placeholder:text-ink-500 focus:outline-none focus:ring-2 focus:ring-forest-600 focus:border-transparent transition-all"
             />
           </div>

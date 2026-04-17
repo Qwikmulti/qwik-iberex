@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { prisma } from "@/lib/db/prisma";
 import { getAllPropertiesAdmin } from "@/lib/db/properties";
 import { ListingsTable } from "@/components/admin/ListingsTable";
 
@@ -13,9 +14,13 @@ export default async function AdminListingsPage({
   const params = await searchParams;
   const page   = parseInt(params.page ?? "1");
 
-  const { data, total, totalPages } = await getAllPropertiesAdmin(
-    page, 20, params.search, params.status
-  );
+  const [listingsData, neighborhoods, amenities] = await Promise.all([
+    getAllPropertiesAdmin(page, 20, params.search, params.status),
+    prisma.neighborhood.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.amenity.findMany({ orderBy: { name: "asc" } }),
+  ]);
+
+  const { data, total, totalPages } = listingsData;
 
   return (
     <div className="space-y-6 max-w-[1100px]">
@@ -37,6 +42,8 @@ export default async function AdminListingsPage({
         currentPage={page}
         currentSearch={params.search ?? ""}
         currentStatus={params.status ?? ""}
+        neighborhoods={neighborhoods}
+        amenities={amenities}
       />
     </div>
   );

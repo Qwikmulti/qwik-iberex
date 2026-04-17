@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { MapPin, Bed, Bath, Maximize2, CheckCircle2 } from "lucide-react";
+import { MapPin, ArrowRight } from "lucide-react";
 import { getPropertyBySlug, getRelatedProperties } from "@/lib/db/properties";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { TourRequestForm } from "@/components/property/TourRequestForm";
-import { formatPriceFull, getStatusLabel, getStatusColor, cn } from "@/lib/utils";
+import { AmenityIcon } from "@/components/property/AmenityIcon";
+import { formatPriceFull, cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -40,137 +42,163 @@ export default async function PropertyDetailPage({ params }: PageProps) {
   const amenities   = property.amenities.map((a) => a.amenity);
 
   return (
-    <div className="pt-16">
-      {/* ─── Gallery ─────────────────────────────────────────────────────── */}
-      <section className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-1 max-h-[600px] overflow-hidden">
-        {/* Main image */}
-        <div className="relative aspect-[4/3] md:aspect-auto bg-cream-200 group">
-          {coverImage?.url || property.coverImageUrl ? (
-            <>
-              <Image
-                src={coverImage?.url ?? property.coverImageUrl!}
-                alt={coverImage?.altText ?? property.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, 66vw"
-              />
-              <div className="absolute bottom-4 left-4">
-                <span className="bg-black/60 backdrop-blur-sm text-cream-200 text-xs font-body px-3 py-1.5 rounded-lg tracking-wide">
-                  MAIN PAVILION
-                </span>
-              </div>
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-cream-200" />
-          )}
-        </div>
+    <div className="bg-white min-h-screen">
+      {/* ─── Gallery Section ─────────────────────────────────────────────── */}
+      <section className="pt-20 lg:pt-24 px-1 lg:px-4">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-1 lg:gap-2">
+          {/* Main Hero Image */}
+          <div className="md:col-span-8 relative aspect-[16/10] md:aspect-[4/3] lg:aspect-[16/10] overflow-hidden bg-cream-100 group">
+            {coverImage?.url || property.coverImageUrl ? (
+              <>
+                <Image
+                  src={coverImage?.url ?? property.coverImageUrl!}
+                  alt={coverImage?.altText ?? property.title}
+                  fill
+                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 66vw"
+                />
+                <div className="absolute bottom-6 left-6 lg:bottom-10 lg:left-10">
+                  <span className="bg-[#0a0a0a]/40 backdrop-blur-md text-cream-50 text-[10px] sm:text-xs font-body px-5 py-2.5 rounded-sm tracking-[0.2em] uppercase font-medium">
+                    MAIN PAVILION
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-cream-200" />
+            )}
+          </div>
 
-        {/* Side images */}
-        <div className="hidden md:flex flex-col gap-1">
-          {sideImages.map((img, i) => (
-            <div key={img.id} className="relative flex-1 overflow-hidden bg-cream-300">
-              <Image
-                src={img.url}
-                alt={img.altText ?? `${property.title} ${i + 2}`}
-                fill
-                className="object-cover"
-                sizes="33vw"
-              />
-            </div>
-          ))}
-          {/* Placeholder if fewer than 2 side images */}
-          {Array.from({ length: Math.max(0, 2 - sideImages.length) }).map((_, i) => (
-            <div key={`ph-${i}`} className="flex-1 bg-cream-200" />
-          ))}
+          {/* Side Images Column */}
+          <div className="md:col-span-4 flex flex-col gap-1 lg:gap-2">
+            {sideImages.map((img, i) => (
+              <div key={img.id} className="relative flex-1 aspect-[16/9] md:aspect-auto overflow-hidden bg-cream-200 group">
+                <Image
+                  src={img.url}
+                  alt={img.altText ?? `${property.title} ${i + 2}`}
+                  fill
+                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </div>
+            ))}
+            {/* Fallback pattern if fewer images */}
+            {sideImages.length < 2 && (
+               <div className="relative flex-1 aspect-[16/9] md:aspect-auto bg-cream-100 flex items-center justify-center">
+                  <p className="text-[10px] tracking-widest text-ink-300 uppercase">Gallery Pending</p>
+               </div>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* ─── Content ──────────────────────────────────────────────────────── */}
-      <div className="max-w-[1200px] mx-auto px-6 py-12">
-        <div className="grid lg:grid-cols-[1fr_380px] gap-16">
-          {/* Left column */}
-          <div>
-            {/* Location + Title */}
-            <div className="mb-8">
-              <p className="label-overline text-forest-600 mb-2">
-                Exclusive Listing ·{" "}
-                {property.neighborhood ? `${property.neighborhood.name}, Abuja` : property.city}
-              </p>
-              <h1 className="font-display text-4xl md:text-5xl text-ink-900 mb-4">
+      {/* ─── Main Content ─────────────────────────────────────────────────── */}
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-16 lg:py-24">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-24">
+          
+          {/* Left Column (Content) */}
+          <div className="lg:col-span-8 space-y-20">
+            
+            {/* Header Info */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                 <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-forest-700">EXCLUSIVE LISTING</span>
+                 <span className="w-1 h-1 rounded-full bg-forest-200 animate-pulse" />
+                 <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-ink-400">
+                    {property.neighborhood?.name ?? property.city}, ABUJA
+                 </span>
+              </div>
+              
+              <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-ink-900 leading-[0.9] tracking-tight">
                 {property.title}
               </h1>
-              {property.tagline && (
-                <p className="text-ink-500 font-body text-lg leading-relaxed max-w-xl">
-                  {property.tagline}
-                </p>
-              )}
+              
+              <p className="text-xl md:text-2xl font-body text-ink-500 leading-relaxed max-w-2xl font-light">
+                {property.tagline}
+              </p>
             </div>
 
-            {/* Narrative */}
-            {property.narrative && (
-              <div className="mb-12">
-                <h2 className="font-display text-2xl text-ink-900 mb-5">
-                  Architectural Narrative
-                </h2>
-                <div className="space-y-4 text-ink-600 font-body leading-relaxed">
-                  {property.narrative.split("\n\n").map((para, i) => (
-                    <p key={i}>{para}</p>
-                  ))}
-                </div>
+            {/* Architectural Narrative */}
+            <div className="space-y-8">
+              <h2 className="text-[10px] font-bold tracking-[0.4em] uppercase text-ink-400 border-b border-cream-200 pb-4">Architectural Narrative</h2>
+              <div className="space-y-6 text-lg font-body text-ink-800 leading-[1.8] max-w-3xl">
+                {property.narrative ? (
+                  property.narrative.split("\n\n").map((para, i) => (
+                    <p key={i} className="first-letter:text-4xl first-letter:font-display first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-forest-800">
+                      {para}
+                    </p>
+                  ))
+                ) : (
+                  <p className="italic text-ink-400">Drafting the architectural story of this masterpiece…</p>
+                )}
               </div>
-            )}
+            </div>
 
-            {/* Amenities */}
-            {amenities.length > 0 && (
-              <div className="mb-12">
-                <p className="label-overline text-ink-500 mb-5">Signature Amenities</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-4 p-6 bg-cream-50 rounded-2xl border border-cream-200">
-                  {amenities.map((amenity) => (
-                    <div key={amenity.id} className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-forest-600 shrink-0" />
-                      <span className="text-xs font-body font-medium text-ink-700 tracking-wide uppercase">
+            {/* Signature Amenities */}
+            <div className="space-y-10">
+               <h2 className="text-[10px] font-bold tracking-[0.4em] uppercase text-ink-400 border-b border-cream-200 pb-4">Signature Amenities</h2>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-12">
+                  {amenities.slice(0, 8).map((amenity) => (
+                    <div key={amenity.id} className="space-y-4 group">
+                      <div className="w-10 h-10 rounded-full border border-forest-100 flex items-center justify-center text-forest-800 transition-all duration-300 group-hover:bg-forest-800 group-hover:text-cream-50 group-hover:scale-110">
+                        <AmenityIcon name={amenity.name} size={18} />
+                      </div>
+                      <p className="text-[11px] font-bold tracking-[0.15em] uppercase text-ink-900">
                         {amenity.name}
-                      </span>
+                      </p>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* Neighborhood */}
-            {property.neighborhood && (
-              <div className="mb-12 grid md:grid-cols-2 gap-8 items-start">
-                <div>
-                  <h2 className="font-display text-3xl text-ink-900 mb-3">
-                    {property.neighborhood.name}: The Zenith of Abuja
-                  </h2>
-                  <p className="text-ink-500 font-body leading-relaxed text-sm">
-                    {property.neighborhood.description}
-                  </p>
-                  {property.nearbyPlaces.length > 0 && (
-                    <ul className="mt-4 space-y-2">
-                      {property.nearbyPlaces.map((place) => (
-                        <li key={place.id} className="flex items-center gap-2 text-sm text-ink-600">
-                          <MapPin size={13} className="text-forest-600 shrink-0" />
-                          <span>{place.distance} to {place.name}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  {amenities.length === 0 && (
+                     <div className="col-span-full py-10 bg-cream-50 rounded-xl text-center text-ink-400 text-sm font-body tracking-wider">
+                        Amenities collection currently in curation.
+                     </div>
                   )}
-                </div>
-                {/* Map placeholder */}
-                <div className="aspect-[4/3] rounded-xl bg-cream-200 overflow-hidden relative">
-                  <Image
-                    src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600"
-                    alt={`Map of ${property.neighborhood.name}`}
-                    fill
-                    className="object-cover opacity-60"
-                  />
-                  <div className="absolute inset-0 flex items-end p-4">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2">
-                      <p className="text-xs font-body font-medium text-ink-800">Open in Maps</p>
-                      <p className="text-2xs text-ink-500">Directions to The Studio</p>
+               </div>
+            </div>
+
+            {/* Neighborhood Spotlight */}
+            {property.neighborhood && (
+              <div className="pt-20 border-t border-cream-200 space-y-12">
+                <div className="grid md:grid-cols-2 gap-16 items-center text-ink-900">
+                  <div className="space-y-8">
+                    <h2 className="font-display text-4xl lg:text-5xl leading-tight">
+                      {property.neighborhood.name}:<br />
+                      <span className="text-forest-700 italic">The Zenith of Abuja</span>
+                    </h2>
+                    <p className="text-ink-600 font-body leading-[1.8] text-lg">
+                      {property.neighborhood.description}
+                    </p>
+                    
+                    {property.nearbyPlaces.length > 0 && (
+                      <div className="space-y-4 pt-4">
+                        {property.nearbyPlaces.map((place) => (
+                          <div key={place.id} className="flex items-center gap-4 text-sm font-body text-ink-800">
+                            <div className="w-6 h-6 rounded-full bg-forest-50 flex items-center justify-center">
+                               <MapPin size={12} className="text-forest-800" />
+                            </div>
+                            <span className="font-bold tracking-tight">{place.distance} TO {place.name.toUpperCase()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Map / Image Overlay */}
+                  <div className="relative aspect-square rounded-[40px] overflow-hidden bg-forest-900 shadow-2xl shadow-forest-900/10 group">
+                    <Image
+                      src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&fit=crop"
+                      alt={property.neighborhood.name}
+                      fill
+                      className="object-cover opacity-60 transition-transform duration-2000 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center p-12">
+                       <div className="w-16 h-16 rounded-full bg-forest-800 flex items-center justify-center text-cream-50 animate-pulse">
+                          <MapPin size={24} />
+                       </div>
+                    </div>
+                    <div className="absolute bottom-10 left-10 p-6 bg-white/90 backdrop-blur-md rounded-2xl">
+                       <p className="text-xs font-bold text-ink-900 tracking-wider">ESTATE PROXY MAP</p>
+                       <p className="text-[10px] text-forest-700 font-medium tracking-widest mt-1">DIRECT ACCESS ENABLED</p>
                     </div>
                   </div>
                 </div>
@@ -178,78 +206,96 @@ export default async function PropertyDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Right column - sticky sidebar */}
-          <aside className="lg:sticky lg:top-24 self-start space-y-6">
-            {/* Price + Specs card */}
-            <div className="bg-white rounded-2xl border border-cream-200 p-6">
-              <p className="label-overline text-ink-400 mb-1">Asking Price</p>
-              <p className="font-display text-3xl text-ink-900 mb-1">
-                {property.currency === "NGN" ? "₦" : "$"}
-              </p>
-              <p className="font-display text-4xl text-ink-900 mb-6">
-                {formatPriceFull(Number(property.askingPrice), property.currency).replace(/^[₦$]/, "")}
-              </p>
-
-              <div className="flex gap-6 pb-5 border-b border-cream-200 mb-5">
-                <SpecBadge label="BEDS"  value={property.bedrooms} />
-                <SpecBadge label="BATHS" value={property.bathrooms} />
-                <SpecBadge label="SQFT"  value={property.sqft.toLocaleString()} />
+          {/* Right Column (Sidebar) */}
+          <aside className="lg:col-span-4 lg:sticky lg:top-32 self-start space-y-10 group">
+            
+            {/* Price & Specs Card */}
+            <div className="bg-[#fcfbf9] border border-cream-200 rounded-[32px] p-10 lg:p-12 space-y-12 transition-all duration-500 hover:shadow-2xl hover:shadow-forest-900/5">
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold tracking-[0.4em] uppercase text-ink-300">Asking Price</p>
+                <div className="flex items-baseline gap-2">
+                   <span className="font-display text-4xl lg:text-5xl text-forest-800 leading-none">
+                      {property.currency === "NGN" ? "₦" : "$"}
+                   </span>
+                   <span className="font-display text-5xl lg:text-7xl text-ink-900 leading-none tracking-tight">
+                      {formatPriceFull(Number(property.askingPrice), property.currency).replace(/^[₦$]/, "").split(".")[0]}
+                   </span>
+                </div>
               </div>
 
-              {/* Status */}
-              <div className="flex items-center gap-2">
-                <span className={cn("badge-status", getStatusColor(property.status))}>
-                  {getStatusLabel(property.status)}
-                </span>
-                {property.exclusive && (
-                  <span className="badge-status bg-forest-800 text-cream-50">Exclusive</span>
-                )}
+              <div className="grid grid-cols-3 gap-8 py-10 border-y border-cream-100">
+                <div className="space-y-1 text-center">
+                  <p className="font-display text-3xl text-ink-900">{String(property.bedrooms).padStart(2, '0')}</p>
+                  <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-ink-400">Beds</p>
+                </div>
+                <div className="space-y-1 text-center border-x border-cream-100">
+                  <p className="font-display text-3xl text-ink-900">{String(property.bathrooms).padStart(2, '0')}</p>
+                  <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-ink-400">Baths</p>
+                </div>
+                <div className="space-y-1 text-center">
+                  <p className="font-display text-3xl text-ink-900 truncate">{(property.sqft / 1000).toFixed(1)}K</p>
+                  <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-ink-400">Sq Ft</p>
+                </div>
+              </div>
+
+              {/* Status & Exclusive */}
+              <div className="flex flex-wrap items-center gap-4">
+                 <div className="flex items-center gap-2 pr-4 border-r border-cream-200">
+                    <span className="w-2 h-2 rounded-full bg-forest-600 animate-pulse" />
+                    <span className="text-[10px] font-bold tracking-widest text-ink-900 uppercase">AVAILABLE NOW</span>
+                 </div>
+                 {property.exclusive && (
+                   <div className="bg-forest-100/50 px-3 py-1 rounded-sm">
+                      <span className="text-[9px] font-bold tracking-widest text-forest-800 uppercase italic">EXCLUSIVE</span>
+                   </div>
+                 )}
               </div>
             </div>
 
-            {/* Tour Request */}
-            <div className="bg-white rounded-2xl border border-cream-200 p-6">
-              <h3 className="font-body font-semibold text-ink-900 mb-1">Arrange a Private Tour</h3>
-              <p className="text-xs text-ink-400 mb-5">
-                Secure your exclusive viewing of this architectural masterpiece. Our concierge
-                will contact you within 2 hours.
-              </p>
+            {/* Inquiry Form */}
+            <div className="bg-white border border-cream-200 rounded-[32px] p-10 lg:p-12 space-y-8">
+              <div className="space-y-2">
+                 <h3 className="font-display text-3xl text-ink-900 tracking-tight">Arrange a Private Tour</h3>
+                 <p className="text-sm font-body text-ink-400 leading-relaxed font-light">
+                   Secure your exclusive viewing of this architectural masterpiece. Our concierge will contact you within 2 hours.
+                 </p>
+              </div>
               <TourRequestForm propertyId={property.id} propertyTitle={property.title} />
             </div>
           </aside>
         </div>
       </div>
 
-      {/* ─── Featured Projects ─────────────────────────────────────────────── */}
+      {/* ─── Featured Section ─────────────────────────────────────────────── */}
       {related.length > 0 && (
-        <section className="py-20 bg-cream-50">
-          <div className="max-w-[1200px] mx-auto px-6">
-            <div className="flex items-end justify-between mb-10">
-              <div>
-                <p className="label-overline text-forest-600 mb-1">Recommended for Your Portfolio</p>
-                <h2 className="font-display text-3xl text-ink-900">Featured Project</h2>
+        <section className="py-24 lg:py-40 bg-cream-50 border-t border-cream-200">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+            <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-16 lg:mb-24">
+              <div className="space-y-4">
+                <p className="text-[10px] font-bold tracking-[0.4em] uppercase text-forest-700">RECOMMENDED FOR YOUR PORTFOLIO</p>
+                <h2 className="font-display text-5xl lg:text-7xl text-ink-900 leading-tight">Featured Project</h2>
               </div>
-              <a href="/properties" className="text-sm text-forest-700 font-body font-medium hover:text-forest-900">
-                View All Listings →
-              </a>
+              <Link 
+                href="/properties" 
+                className="group flex items-center gap-4 text-xs font-bold tracking-[0.2em] uppercase text-ink-900 transition-colors hover:text-forest-800"
+              >
+                VIEW ALL LISTINGS
+                <div className="w-10 h-10 rounded-full border border-ink-100 flex items-center justify-center transition-transform group-hover:translate-x-2">
+                   <ArrowRight size={16} />
+                </div>
+              </Link>
             </div>
-            <div className="grid md:grid-cols-3 gap-6">
+            
+            <div className="grid md:grid-cols-3 gap-10">
               {related.map((p) => (
-                <PropertyCard key={p.id} property={p} />
+                <div key={p.id} className="animate-in fade-in slide-in-from-bottom-10 duration-1000">
+                   <PropertyCard property={p} />
+                </div>
               ))}
             </div>
           </div>
         </section>
       )}
-    </div>
-  );
-}
-
-function SpecBadge({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="text-center">
-      <p className="font-display text-2xl text-ink-900">{value}</p>
-      <p className="text-2xs font-body text-ink-400 tracking-widest mt-0.5">{label}</p>
     </div>
   );
 }

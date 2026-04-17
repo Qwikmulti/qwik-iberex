@@ -13,6 +13,8 @@ interface PropertyFormProps {
   property?: any;
   neighborhoods: Neighborhood[];
   amenities: Amenity[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 const STATUS_OPTIONS = [
@@ -23,7 +25,7 @@ const TYPE_OPTIONS = [
   "DETACH", "SEMI_DETACH", "PENTHOUSE", "ESTATE", "TERRACE", "APARTMENT", "VILLA",
 ];
 
-export function PropertyForm({ property, neighborhoods, amenities }: PropertyFormProps) {
+export function PropertyForm({ property, neighborhoods, amenities, onSuccess, onCancel }: PropertyFormProps) {
   const router  = useRouter();
   const isEdit  = !!property;
   const [saving, setSaving]       = useState(false);
@@ -117,8 +119,11 @@ export function PropertyForm({ property, neighborhoods, amenities }: PropertyFor
     if (res.ok) {
       setSaved(true);
       setTimeout(() => {
-        router.push("/admin/listings");
-        router.refresh();
+        if (onSuccess) onSuccess();
+        else {
+          router.push("/admin/listings");
+          router.refresh();
+        }
       }, 1000);
     }
     setSaving(false);
@@ -428,7 +433,7 @@ export function PropertyForm({ property, neighborhoods, amenities }: PropertyFor
         </button>
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => onCancel ? onCancel() : router.back()}
           className="btn-ghost text-sm"
         >
           Cancel
