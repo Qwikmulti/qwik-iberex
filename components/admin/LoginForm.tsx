@@ -1,28 +1,57 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Loader2, Mail, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const error        = searchParams.get("error");
+  
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
     await signIn("google", { callbackUrl: "/admin" });
   };
 
+  const handleCredentialsSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setFormError(null);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      }) as any;
+
+      if (result?.error) {
+        setFormError("Invalid email or password");
+        setLoading(false);
+      } else {
+        router.push("/admin");
+      }
+    } catch (err) {
+      setFormError("An unexpected error occurred. Please try again.");
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {error && (
+    <div className="space-y-6">
+      {(error || formError) && (
         <div className="bg-red-950/50 border border-red-800 rounded-lg px-4 py-3">
           <p className="text-sm text-red-400">
-            {error === "unauthorized"
+            {formError || (error === "unauthorized"
               ? "Your account does not have admin access."
-              : "Authentication failed. Please try again."}
+              : "Authentication failed. Please try again.")}
           </p>
         </div>
       )}
@@ -34,10 +63,10 @@ export function LoginForm() {
           "w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl",
           "bg-white text-ink-900 font-body font-medium text-sm",
           "hover:bg-cream-100 transition-colors",
-          "disabled:opacity-60 disabled:cursor-not-allowed"
+          "disabled:opacity-60 disabled:cursor-not-allowed border border-ink-200"
         )}
       >
-        {loading ? (
+        {loading && !email ? (
           <Loader2 size={18} className="animate-spin" />
         ) : (
           <svg width="18" height="18" viewBox="0 0 18 18">
@@ -55,25 +84,49 @@ export function LoginForm() {
           <div className="w-full border-t border-ink-700" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-ink-900 px-3 text-xs text-ink-500 font-body">or</span>
+          <span className="bg-ink-900 px-3 text-xs text-ink-500 font-body uppercase tracking-widest">or</span>
         </div>
       </div>
 
-      {/* Email magic link placeholder */}
-      <div className="space-y-3">
-        <input
-          type="email"
-          placeholder="admin@iberexestate.com"
-          className="w-full bg-ink-800 border border-ink-600 rounded-xl px-4 py-3 text-sm text-cream-100 placeholder:text-ink-500 focus:outline-none focus:ring-2 focus:ring-forest-600"
-        />
+      <form onSubmit={handleCredentialsSignIn} className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-xs font-body text-ink-400 uppercase tracking-widest ml-1">Email Address</label>
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-500" size={16} />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@iberexestate.com"
+              className="w-full bg-ink-800 border border-ink-600 rounded-xl pl-12 pr-4 py-3 text-sm text-cream-100 placeholder:text-ink-500 focus:outline-none focus:ring-2 focus:ring-forest-600 focus:border-transparent transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-body text-ink-400 uppercase tracking-widest ml-1">Password</label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-500" size={16} />
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-ink-800 border border-ink-600 rounded-xl pl-12 pr-4 py-3 text-sm text-cream-100 placeholder:text-ink-500 focus:outline-none focus:ring-2 focus:ring-forest-600 focus:border-transparent transition-all"
+            />
+          </div>
+        </div>
+
         <button
-          type="button"
-          className="w-full py-3 rounded-xl bg-forest-700 text-cream-50 font-body font-medium text-sm hover:bg-forest-600 transition-colors"
-          onClick={() => alert("Magic link feature coming soon")}
+          type="submit"
+          disabled={loading}
+          className="w-full py-4 rounded-xl bg-forest-700 text-cream-50 font-body font-medium text-sm hover:bg-forest-600 transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Send Magic Link
+          {loading && email ? <Loader2 size={18} className="animate-spin" /> : "Sign In to Dashboard"}
         </button>
-      </div>
+      </form>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { PrismaClient, PropertyStatus, PropertyType, BlogCategory, UserRole } from "@prisma/client";
 
 const prisma = new PrismaClient();
+import bcrypt from "bcryptjs";
 
 async function main() {
   console.log("🌱 Seeding database...");
@@ -78,12 +79,16 @@ async function main() {
   });
 
   // ─── Admin user ──────────────────────────────────────────────────────────────
+  const hashedPassword = await bcrypt.hash("iberexestatesinvestment@#", 10);
   const admin = await prisma.user.upsert({
-    where: { email: "admin@iberexestate.com" },
-    update: {},
+    where: { email: "iberexestatesinvestment@gmail.com" },
+    update: {
+      password: hashedPassword,
+    },
     create: {
-      name: "Amana Okafor",
-      email: "admin@iberexestate.com",
+      name: "Iberex Admin",
+      email: "iberexestatesinvestment@gmail.com",
+      password: hashedPassword,
       role: UserRole.ADMIN,
       phone: "+234 803 060 0177",
       bio: "Principal Consultant at Iberex Estate & Development",
